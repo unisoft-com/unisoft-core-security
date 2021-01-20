@@ -22,8 +22,8 @@ import java.util.Objects;
 public class AccessTokenPolicy implements HttpPipelinePolicy {
     private static final Logger log = LoggerFactory.getLogger(AccessTokenPolicy.class);
 
-    private final String header;
-    private final String prefix;
+    protected final String header;
+    protected final String prefix;
     private final SimpleTokenCache tokenCache;
 
     public AccessTokenPolicy(String header, String prefix, TokenCredential credential) {

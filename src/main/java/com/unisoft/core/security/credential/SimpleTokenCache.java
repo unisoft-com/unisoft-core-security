@@ -13,13 +13,13 @@ import java.util.function.Supplier;
  * @author omar.H.Ajmi
  * @since 23/10/2020
  */
-public class SimpleTokenCache {
+public class SimpleTokenCache implements TokenCache {
     private static final Logger log = LoggerFactory.getLogger(SimpleTokenCache.class);
 
     private final AtomicBoolean wip;
     private final ReplayProcessor<AccessToken> emitterProcessor = ReplayProcessor.create(1);
     private final FluxSink<AccessToken> sink = emitterProcessor.sink(FluxSink.OverflowStrategy.BUFFER);
-    private final Supplier<Mono<AccessToken>> tokenSupplier;
+    private final Supplier<Mono<? extends AccessGranter>> tokenSupplier;
     private AccessToken cache;
 
     /**
@@ -27,7 +27,7 @@ public class SimpleTokenCache {
      *
      * @param tokenSupplier a method to get a new token
      */
-    public SimpleTokenCache(Supplier<Mono<AccessToken>> tokenSupplier) {
+    public SimpleTokenCache(Supplier<Mono<? extends AccessGranter>> tokenSupplier) {
         this.wip = new AtomicBoolean(false);
         this.tokenSupplier = tokenSupplier;
     }
@@ -37,7 +37,7 @@ public class SimpleTokenCache {
      *
      * @return a Publisher that emits an AccessToken
      */
-    public Mono<AccessToken> getToken() {
+    public Mono<? extends AccessGranter> getToken() {
         if (this.cache != null && !this.cache.isExpired()) {
             log.debug("token is valid! returning cached token");
             return Mono.just(this.cache);
@@ -45,10 +45,10 @@ public class SimpleTokenCache {
         return Mono.defer(() -> {
             if (!wip.getAndSet(true)) {
                 return this.tokenSupplier.get().doOnNext(ac -> {
-                    this.cache = ac;
+                    this.cache = (AccessToken) ac;
                     log.debug("token cached! will expire after {} seconds", ac.getExpiresAt().getSecond());
                 })
-                        .doOnNext(this.sink::next)
+                        .doOnNext(t -> this.sink.next((AccessToken) t))
                         .doOnError(this.sink::error)
                         .doOnTerminate(() -> wip.set(false));
             } else {

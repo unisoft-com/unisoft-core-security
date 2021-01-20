@@ -1,14 +1,17 @@
 package com.unisoft.core.security.credential;
 
+import com.unisoft.core.annotations.Immutable;
+
 import java.time.OffsetDateTime;
 
 /**
- * Represents an immutable access token with a token string and an expiration time.
+ * Basic {@link AccessGranter} implementation
  *
  * @author omar.H.Ajmi
  * @since 23/10/2020
  */
-public class AccessToken {
+@Immutable
+public class AccessToken implements AccessGranter {
 
     private final String token;
     private final OffsetDateTime expiresAt;
@@ -27,6 +30,7 @@ public class AccessToken {
     /**
      * @return the token string.
      */
+    @Override
     public String getToken() {
         return token;
     }
@@ -34,6 +38,7 @@ public class AccessToken {
     /**
      * @return the time when the token expires, in UTC.
      */
+    @Override
     public OffsetDateTime getExpiresAt() {
         return expiresAt;
     }
@@ -41,6 +46,7 @@ public class AccessToken {
     /**
      * @return if the token has expired.
      */
+    @Override
     public boolean isExpired() {
         return OffsetDateTime.now().isAfter(this.expiresAt);
     }

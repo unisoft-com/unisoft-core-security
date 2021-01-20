@@ -16,5 +16,5 @@ public interface TokenCredential {
      *
      * @return a Publisher that emits a single access token
      */
-    Mono<AccessToken> getToken();
+    Mono<? extends AccessGranter> getToken();
 }
